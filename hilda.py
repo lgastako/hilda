@@ -16,9 +16,20 @@ def memoize(f):
     return wrapped
 
 
-class Table(object):
+class Column(object):
     def __init__(self, name):
         self.name = name
+
+
+class Table(object):
+    def __init__(self, driver, name):
+        self.driver = driver
+        self.name = name
+
+    def columns(self):
+        cursor = self.driver.cursor()
+        rows = cursor.execute("PRAGMA table_info(%s)" % self.name).fetchall()
+        return [Column(row[1]) for row in rows]
 
 
 class Database(object):
@@ -33,7 +44,7 @@ class Database(object):
             WHERE type='table'
             ORDER BY name;
         """).fetchall()
-        return [Table(row[0]) for row in rows]
+        return [Table(self.driver, row[0]) for row in rows]
 
     def forget(self):
         if hasattr(self, "_memo_cache"):

@@ -47,6 +47,16 @@ class DatabaseTests(unittest.TestCase):
         table2 = database.tables()[0]
         self.assert_(table1 != table2)
 
+    def test_can_get_columns_from_table(self):
+        database = Database(self.db2)
+        table = database.tables()[0]
+        columns = table.columns()
+        self.assertEqual(1, len(columns)) # TODO: Should be 2 to incl "id"
+        expected_column_names = ("bif")   # TODO: How do we get "id" ?
+        for column in columns:
+            self.assert_(bool(column))
+            self.assert_(column.name in expected_column_names)
+
     def tearDown(self):
         self.db1.close()
         self.db2.close()
