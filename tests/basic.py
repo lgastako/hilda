@@ -172,7 +172,7 @@ class DatabaseTests(unittest.TestCase):
 
         selection = episodes.c.production_id==productions.c.id
         self.assertEqual(Selection, type(selection))
-        self.assertEqual("episodes.production_id = productions.id",
+        self.assertEqual("episodes.productionx_id = productions.id",
                          selection.to_sql_fragment())
 
     def test_columns_ne_comparison_results_in_proper_selection_object(self):
@@ -219,6 +219,45 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual(Selection, type(selection))
         self.assertEqual("episodes.production_id >= productions.id",
                          selection.to_sql_fragment())
+
+    def test_can_select_from_join_of_two_tables(self):
+        episodes = self.database.get_table("episodes")
+        productions = self.database.get_table("productions")
+
+        productions.insert(type=PRODUCTION_TYPE_TV_SHOW,
+                           name="Lost")
+        productions.insert(type=PRODUCTION_TYPE_TV_SHOW,
+                           name="Dexter")
+
+        lost = productions.select_one_where(name="Lost")
+        dexter = productions.select_one_where(name="Dexter")
+
+        episodes.insert(production_id=lost.id,
+                        season_number=1,
+                        episode_number=1,
+                        name="Pilot, Part 1")
+        episodes.insert(production_id=lost.id,
+                        season_number=1,
+                        episode_number=2,
+                        name="Pilot, Part 2")
+        episodes.insert(production_id=lost.id,
+                        season_number=1,
+                        episode_number=3,
+                        name="Tabula Rasa")
+
+        episodes.insert(production_id=dexter.id,
+                        season_number=1,
+                        episode_number=1,
+                        name="Pilot")
+        episodes.insert(production_id=dexter.id,
+                        season_number=1,
+                        episode_number=2,
+                        name="Crocodile")
+
+        episode_with_production = self.database.create_join(\
+            episodes.c.production_id==productions.c.id)
+        episodes = episode_with_production.select()
+        self.assertEqual(5, len(episodes))
 
     def tearDown(self):
         self.tv_movie_db.close()

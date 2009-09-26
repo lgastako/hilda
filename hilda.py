@@ -143,6 +143,9 @@ class Database(object):
         if hasattr(self, "_memo_cache"):
             del self.__dict__["_memo_cache"]
 
+    def create_join(self, *args):
+        return Join(args)
+
 
 class Selection(object):
     def __init__(self, column1, operator, argument):
@@ -161,4 +164,11 @@ class Selection(object):
                                 self.operator,
                                 self._render_argument())
 
+
+class Join(object):
+    def __init__(self, selections):
+        self.selections = selections
+
+    def select(self, where=None):
+        return []
 
