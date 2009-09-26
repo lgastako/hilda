@@ -172,7 +172,7 @@ class DatabaseTests(unittest.TestCase):
 
         selection = episodes.c.production_id==productions.c.id
         self.assertEqual(Selection, type(selection))
-        self.assertEqual("episodes.productionx_id = productions.id",
+        self.assertEqual("episodes.production_id = productions.id",
                          selection.to_sql_fragment())
 
     def test_columns_ne_comparison_results_in_proper_selection_object(self):
@@ -255,9 +255,16 @@ class DatabaseTests(unittest.TestCase):
                         name="Crocodile")
 
         episode_with_production = self.database.create_join(\
-            episodes.c.production_id==productions.c.id)
+            episodes.c.production_id==productions.c.id,
+            aliases=[episodes.c.name("episode_name"),
+                     productions.c.name("production_name"),
+                     episodes.c.id("episode_id"),
+                     productions.c.id("production_production_id")])
         episodes = episode_with_production.select()
         self.assertEqual(5, len(episodes))
+
+    # TODO: Explicit tests for aliases at column level and in
+    # create_join.  Also should add to all other select statement stuff.
 
     def tearDown(self):
         self.tv_movie_db.close()
