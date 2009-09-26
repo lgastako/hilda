@@ -25,16 +25,24 @@ def colonize(column):
     return ":" + column
 
 
+def _bind_selection(op):
+    def _bound_selection(self, other):
+        return Selection(self, op, other)
+    return _bound_selection
+
+
 class Column(object):
     def __init__(self, name, table):
         self.name = name
         self.table = table
 
-    def __eq__(self, other):
-        return Selection(self, "=", other)
 
-    def __ne__(self, other):
-        return Selection(self, "!=", other)
+    __eq__ = _bind_selection("=")
+    __ne__ = _bind_selection("<>")
+    __lt__ = _bind_selection("<")
+    __gt__ = _bind_selection(">")
+    __le__ = _bind_selection("<=")
+    __ge__ = _bind_selection(">=")
 
 
 class Table(object):
@@ -135,8 +143,9 @@ class Database(object):
         if hasattr(self, "_memo_cache"):
             del self.__dict__["_memo_cache"]
 
+
 class Selection(object):
-    def __init__(self, column1, comparison_type, argument):
+    def __init__(self, column1, operator, argument):
         self.__dict__.update(locals())
         del self.self
 
@@ -149,5 +158,7 @@ class Selection(object):
     def to_sql_fragment(self):
         return "%s.%s %s %s" % (self.column1.table.name,
                                 self.column1.name,
-                                self.comparison_type,
+                                self.operator,
                                 self._render_argument())
+
+

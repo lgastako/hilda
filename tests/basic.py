@@ -181,7 +181,43 @@ class DatabaseTests(unittest.TestCase):
 
         selection = episodes.c.production_id!=productions.c.id
         self.assertEqual(Selection, type(selection))
-        self.assertEqual("episodes.production_id != productions.id",
+        self.assertEqual("episodes.production_id <> productions.id",
+                         selection.to_sql_fragment())
+
+    def test_columns_lt_comparison_results_in_proper_selection_object(self):
+        episodes = self.database.get_table("episodes")
+        productions = self.database.get_table("productions")
+
+        selection = episodes.c.production_id < productions.c.id
+        self.assertEqual(Selection, type(selection))
+        self.assertEqual("episodes.production_id < productions.id",
+                         selection.to_sql_fragment())
+
+    def test_columns_gt_comparison_results_in_proper_selection_object(self):
+        episodes = self.database.get_table("episodes")
+        productions = self.database.get_table("productions")
+
+        selection = episodes.c.production_id > productions.c.id
+        self.assertEqual(Selection, type(selection))
+        self.assertEqual("episodes.production_id > productions.id",
+                         selection.to_sql_fragment())
+
+    def test_columns_lte_comparison_results_in_proper_selection_object(self):
+        episodes = self.database.get_table("episodes")
+        productions = self.database.get_table("productions")
+
+        selection = episodes.c.production_id<=productions.c.id
+        self.assertEqual(Selection, type(selection))
+        self.assertEqual("episodes.production_id <= productions.id",
+                         selection.to_sql_fragment())
+
+    def test_columns_gte_comparison_results_in_proper_selection_object(self):
+        episodes = self.database.get_table("episodes")
+        productions = self.database.get_table("productions")
+
+        selection = episodes.c.production_id>=productions.c.id
+        self.assertEqual(Selection, type(selection))
+        self.assertEqual("episodes.production_id >= productions.id",
                          selection.to_sql_fragment())
 
     def tearDown(self):
