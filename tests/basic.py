@@ -166,13 +166,22 @@ class DatabaseTests(unittest.TestCase):
         for column in columns:
             self.assertEqual(column, getattr(productions.c, column.name))
 
-    def test_columns_eq_comparison_results_in_selection_object(self):
+    def test_columns_eq_comparison_results_in_proper_selection_object(self):
         episodes = self.database.get_table("episodes")
         productions = self.database.get_table("productions")
 
         selection = episodes.c.production_id==productions.c.id
         self.assertEqual(Selection, type(selection))
         self.assertEqual("episodes.production_id = productions.id",
+                         selection.to_sql_fragment())
+
+    def test_columns_ne_comparison_results_in_proper_selection_object(self):
+        episodes = self.database.get_table("episodes")
+        productions = self.database.get_table("productions")
+
+        selection = episodes.c.production_id!=productions.c.id
+        self.assertEqual(Selection, type(selection))
+        self.assertEqual("episodes.production_id != productions.id",
                          selection.to_sql_fragment())
 
     def tearDown(self):

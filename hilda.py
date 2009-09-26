@@ -33,6 +33,9 @@ class Column(object):
     def __eq__(self, other):
         return Selection(self, "=", other)
 
+    def __ne__(self, other):
+        return Selection(self, "!=", other)
+
 
 class Table(object):
     def __init__(self, driver, name):
