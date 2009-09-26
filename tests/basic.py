@@ -151,6 +151,14 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual(2, len(all))
         self.assertEqual(1, len(some))
 
+    def test_can_do_simplified_select_one_where(self):
+        database = Database(self.tv_movie_db)
+        characters = database.get_table("characters")
+        characters.insert(name="Kate Austin")
+        characters.insert(name="Juliet Burke")
+
+        juliet = characters.select_one_where(name="Juliet Burke")
+        self.assertEqual((2, "Juliet Burke"), juliet)
 
     def tearDown(self):
         self.tv_movie_db.close()

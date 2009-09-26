@@ -80,6 +80,13 @@ class Table(object):
             sql += " LIMIT %d" % limit
         return map(self.record._make, cursor.execute(sql, kwargs).fetchall())
 
+    def select_one_where(self, **kwargs):
+        results = self.select_where(limit=2, **kwargs)
+        if len(results) <= 0:
+            raise NoResultFound
+        if len(results) > 1:
+            raise TooManyResultsFound
+        return results[0]
 
 
 class Database(object):
