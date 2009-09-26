@@ -26,8 +26,9 @@ def colonize(column):
 
 
 class Column(object):
-    def __init__(self, name):
+    def __init__(self, name, table):
         self.name = name
+        self.table = table
 
 
 class Table(object):
