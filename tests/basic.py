@@ -11,104 +11,128 @@ from hilda import Database
 
 class DatabaseTests(unittest.TestCase):
     def setUp(self):
-        self.db1 = sqlite3.connect(":memory:")
-        cursor = self.db1.cursor()
-        cursor.execute("""CREATE TABLE foo (
+        self.tv_movie_db = sqlite3.connect(":memory:")
+        cursor = self.tv_movie_db.cursor()
+        cursor.execute("""CREATE TABLE productions (
                               id INTEGER PRIMARY KEY,
-                              value VARCHAR(255)
+                              type INTEGER NOT NULL,
+                              name VARCHAR(255) NOT NULL
                           );""")
-
-        cursor.execute("""CREATE TABLE bar (
+        cursor.execute("""CREATE TABLE episodes (
                               id INTEGER PRIMARY KEY,
-                              value VARCHAR(255) NOT NULL
+                              production_id INTEGER NOT NULL,
+                              season_number INTEGER,
+                              episode_number INTEGER NOT NULL,
+                              episode_name VARCHAR(255)
                           );""")
-
-        self.db2 = sqlite3.connect(":memory:")
-        cursor = self.db2.cursor()
-        cursor.execute("CREATE TABLE baz (bif INTEGER PRIMARY KEY)")
+        cursor.execute("""CREATE TABLE episodes_productions (
+                              episode_id INTEGER NOT NULL,
+                              production_id INTEGER NOT NULL
+                          );""")
+        cursor.execute("""CREATE TABLE actors (
+                              id INTEGER PRIMARY KEY,
+                              first_name VARCHAR(255),
+                              last_name VARCHAR(255),
+                              headshot_url VARCHAR(4096)
+                          );""")
+        cursor.execute("""CREATE TABLE characters (
+                              id INTEGER PRIMARY KEY,
+                              name VARCHAR(255) NOT NULL
+                          );""")
+        cursor.execute("""CREATE TABLE roles(
+                              id INTEGER PRIMARY KEY,
+                              episode_id INTEGER NOT NULL,
+                              actor_id INTEGER NOT NULL,
+                              character_id INTEGER NOT NULL
+                          );""")
 
     def test_can_list_tables(self):
-        database = Database(self.db1)
+        database = Database(self.tv_movie_db)
         tables = database.tables()
-        self.assertEqual(2, len(tables))
-        expected_table_names = ("foo" ,"bar")
+        self.assertEqual(6, len(tables))
+        expected_table_names = ("productions",
+                                "episodes",
+                                "episodes_productions",
+                                "actors",
+                                "characters",
+                                "roles")
         for table in tables:
             self.assert_(bool(table))
             self.assert_(table.name in expected_table_names)
 
     def test_listed_tables_are_cached(self):
-        database = Database(self.db2)
+        database = Database(self.tv_movie_db)
         table1 = database.tables()[0]
         table2 = database.tables()[0]
         self.assert_(table1 == table2)
 
     def test_listed_tables_are_not_cached_after_forget(self):
-        database = Database(self.db2)
+        database = Database(self.tv_movie_db)
         table1 = database.tables()[0]
         database.forget()
         table2 = database.tables()[0]
         self.assert_(table1 != table2)
 
     def test_can_get_columns_from_table(self):
-        database = Database(self.db2)
-        table = database.tables()[0]
-        columns = table.columns()
-        self.assertEqual(1, len(columns)) # TODO: Should be 2 to incl "id"
-        expected_column_names = ("bif")   # TODO: How do we get "id" ?
+        database = Database(self.tv_movie_db)
+        productions = database.get_table("productions")
+        columns = productions.columns()
+        self.assertEqual(3, len(columns))
+        expected_column_names = ("id", "type", "name")
         for column in columns:
             self.assert_(bool(column))
             self.assert_(column.name in expected_column_names)
 
     def test_can_get_a_table_by_name(self):
-        database = Database(self.db1)
-        foo = database.get_table("foo")
-        bar = database.get_table("bar")
-        self.assertEqual("foo", foo.name)
-        self.assertEqual("bar", bar.name)
+        database = Database(self.tv_movie_db)
+        productions = database.get_table("productions")
+        episodes = database.get_table("episodes")
+        self.assertEqual("productions", productions.name)
+        self.assertEqual("episodes", episodes.name)
 
     def test_can_insert_a_single_row_into_a_table(self):
-        database = Database(self.db1)
-        foo = database.get_table("foo")
-        foo.insert(value="Kate Austin")
+        database = Database(self.tv_movie_db)
+        characters = database.get_table("characters")
+        characters.insert(name="Kate Austin")
 
-        cursor = self.db1.cursor()
-        rows = cursor.execute("SELECT * FROM foo").fetchall()
+        cursor = self.tv_movie_db.cursor()
+        rows = cursor.execute("SELECT * FROM characters").fetchall()
         self.assertEqual(1, len(rows))
         self.assertEqual((1, "Kate Austin"), rows[0])
 
     def test_can_select_a_single_row_from_a_table_by_text_where_clause(self):
-        database = Database(self.db1)
-        foo = database.get_table("foo")
-        foo.insert(value="Kate Austin")
-        foo.insert(value="Juliet Burke")
+        database = Database(self.tv_movie_db)
+        characters = database.get_table("characters")
+        characters.insert(name="Kate Austin")
+        characters.insert(name="Juliet Burke")
 
         # We pull them out in reverse order just to avoid a simple
         # iteration satisfying the test by conincidence
-        juliets = foo.select(where="id = 2")
-        kates   = foo.select(where="id = 1")
+        juliets = characters.select(where="id = 2")
+        kates   = characters.select(where="id = 1")
         self.assertEqual(1, len(juliets))
         self.assertEqual(1, len(kates))
 
         juliet = juliets[0]
         kate   = kates[0]
-        self.assertEqual("Juliet Burke", juliet.value)
-        self.assertEqual("Kate Austin", kate.value)
+        self.assertEqual("Juliet Burke", juliet.name)
+        self.assertEqual("Kate Austin", kate.name)
 
     def test_can_select_all_rows_from_a_table_with_no_where_clause(self):
-        database = Database(self.db1)
-        foo = database.get_table("foo")
-        foo.insert(value="Kate Austin")
-        foo.insert(value="Juliet Burke")
+        database = Database(self.tv_movie_db)
+        characters = database.get_table("characters")
+        characters.insert(name="Kate Austin")
+        characters.insert(name="Juliet Burke")
 
-        ladies = foo.select()
+        ladies = characters.select()
         self.assertEqual(2, len(ladies))
 
         self.assertEqual(["Kate Austin", "Juliet Burke"],
-                         [lady.value for lady in ladies])
+                         [lady.name for lady in ladies])
+
 
     def tearDown(self):
-        self.db1.close()
-        self.db2.close()
+        self.tv_movie_db.close()
 
 
 if __name__ == "__main__":
