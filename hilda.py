@@ -167,10 +167,6 @@ class Selection(object):
                                 self._render_argument())
 
 
-class Join(object):
+class Join(SelectMixin):
     def __init__(self, selections):
         self.selections = selections
-
-    def select(self, where=None):
-        return []
-
