@@ -131,3 +131,20 @@ class Database(object):
     def forget(self):
         if hasattr(self, "_memo_cache"):
             del self.__dict__["_memo_cache"]
+
+class Selection(object):
+    def __init__(self, column1, comparison_type, argument):
+        self.__dict__.update(locals())
+        del self.self
+
+    def _render_argument(self):
+        arg = self.argument
+        if isinstance(arg, Column):
+            return "%s.%s" % (arg.table.name, arg.name)
+        return str(arg)
+
+    def to_sql_fragment(self):
+        return "%s.%s %s %s" % (self.column1.table.name,
+                                self.column1.name,
+                                self.comparison_type,
+                                self._render_argument())
