@@ -66,6 +66,16 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual("foo", foo.name)
         self.assertEqual("bar", bar.name)
 
+    def test_can_insert_a_single_row_into_a_table(self):
+        database = Database(self.db1)
+        foo = database.get_table("foo")
+        foo.insert(value="Kate Austin")
+
+        cursor = self.db1.cursor()
+        rows = cursor.execute("SELECT * FROM foo").fetchall()
+        self.assertEqual(1, len(rows))
+        self.assertEqual((1, "Kate Austin"), rows[0])
+
     def tearDown(self):
         self.db1.close()
         self.db2.close()

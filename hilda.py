@@ -19,6 +19,10 @@ def memoize(f):
     return wrapped
 
 
+def colonize(column):
+    return ":" + column
+
+
 class Column(object):
     def __init__(self, name):
         self.name = name
@@ -33,6 +37,16 @@ class Table(object):
         cursor = self.driver.cursor()
         rows = cursor.execute("PRAGMA table_info(%s)" % self.name).fetchall()
         return [Column(row[1]) for row in rows]
+
+    def insert(self, *args, **kwargs):
+        cursor = self.driver.cursor()
+        columns = kwargs.keys()
+        column_specification = ", ".join(columns)
+        value_template = ", ".join(map(colonize, columns))
+        sql = "INSERT INTO %s (%s) VALUES (%s)" % (self.name,
+                                                   column_specification,
+                                                   value_template)
+        return cursor.execute(sql, kwargs)
 
 
 class Database(object):
