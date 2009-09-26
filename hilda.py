@@ -1,5 +1,7 @@
 from functools import wraps
 from collections import defaultdict
+from collections import namedtuple
+
 
 # TODO: manage lifecycle of cursor correctly.  Probably shouldn't be
 # creating new ones all over the place?
@@ -47,6 +49,21 @@ class Table(object):
                                                    column_specification,
                                                    value_template)
         return cursor.execute(sql, kwargs)
+
+    @memoize
+    def _make_record(self):
+        return namedtuple("%sRecord" % self.name.title(),
+                          [c.name for c in self.columns()])
+
+    record = property(_make_record)
+
+    def select(self, where=None):
+        cursor = self.driver.cursor()
+        sql = "SELECT * FROM %s" % self.name
+        if where:
+            sql += " WHERE " + where
+        return map(self.record._make, cursor.execute(sql).fetchall())
+
 
 
 class Database(object):

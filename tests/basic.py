@@ -76,6 +76,24 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual(1, len(rows))
         self.assertEqual((1, "Kate Austin"), rows[0])
 
+    def test_can_select_a_single_row_from_a_table_by_text_where_clause(self):
+        database = Database(self.db1)
+        foo = database.get_table("foo")
+        foo.insert(value="Kate Austin")
+        foo.insert(value="Juliet Burke")
+
+        # We pull them out in reverse order just to avoid a simple
+        # iteration satisfying the test by conincidence
+        juliets = foo.select(where="id = 2")
+        kates   = foo.select(where="id = 1")
+        self.assertEqual(1, len(juliets))
+        self.assertEqual(1, len(kates))
+
+        juliet = juliets[0]
+        kate   = kates[0]
+        self.assertEqual("Juliet Burke", juliet.value)
+        self.assertEqual("Kate Austin", kate.value)
+
     def tearDown(self):
         self.db1.close()
         self.db2.close()
