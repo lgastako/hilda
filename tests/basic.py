@@ -130,6 +130,16 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual(["Kate Austin", "Juliet Burke"],
                          [lady.name for lady in ladies])
 
+    def test_can_do_simplified_select_where(self):
+        database = Database(self.tv_movie_db)
+        characters = database.get_table("characters")
+        characters.insert(name="Kate Austin")
+        characters.insert(name="Juliet Burke")
+
+        juliets = characters.select_where(name="Juliet Burke")
+        self.assertEqual(1, len(juliets))
+        self.assertEqual((2, "Juliet Burke"), juliets[0])
+
     def test_can_do_select_with_limit(self):
         database = Database(self.tv_movie_db)
         characters = database.get_table("characters")

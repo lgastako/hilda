@@ -66,6 +66,20 @@ class Table(object):
             sql += " LIMIT %d" + limit
         return map(self.record._make, cursor.execute(sql).fetchall())
 
+    def select_where(self, limit=None, **kwargs):
+        cursor = self.driver.cursor()
+
+        sql = "SELECT * FROM %s" % self.name
+        if len(kwargs):
+            columns = kwargs.keys()
+            column_param_pairs = [(column, colonize(column)) for column in columns]
+            clauses = ["%s = %s" % pair for pair in column_param_pairs]
+            where = " AND ".join(clauses)
+            sql += " WHERE " + where
+        if limit is not None:
+            sql += " LIMIT %d" % limit
+        return map(self.record._make, cursor.execute(sql, kwargs).fetchall())
+
 
 
 class Database(object):
