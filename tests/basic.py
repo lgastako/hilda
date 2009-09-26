@@ -157,6 +157,13 @@ class DatabaseTests(unittest.TestCase):
         characters = self.database.get_table("characters")
         name = characters.c.name
         self.assertEqual(characters, name.table)
+
+    def test_can_access_table_columns_via_c(self):
+        productions = self.database.get_table("productions")
+        columns = productions.columns()
+        self.assertEqual(3, len(columns))
+        for column in columns:
+            self.assertEqual(column, getattr(productions.c, column.name))
     def tearDown(self):
         self.tv_movie_db.close()
 

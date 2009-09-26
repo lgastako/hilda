@@ -36,10 +36,20 @@ class Table(object):
         self.driver = driver
         self.name = name
 
+    @memoize
     def columns(self):
         cursor = self.driver.cursor()
         rows = cursor.execute("PRAGMA table_info(%s)" % self.name).fetchall()
-        return [Column(row[1]) for row in rows]
+        return [Column(row[1], self) for row in rows]
+
+    def _make_column_property(self):
+        columns = self.columns()
+        column_tuple_type = namedtuple("%sColumns" % self.name.title(),
+                                       [c.name for c in columns])
+        column_dict = dict((str(c.name), c) for c in columns)
+        return column_tuple_type(**column_dict)
+
+    c = property(_make_column_property)
 
     def insert(self, *args, **kwargs):
         cursor = self.driver.cursor()
