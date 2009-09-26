@@ -45,10 +45,10 @@ class DatabaseTests(unittest.TestCase):
                               actor_id INTEGER NOT NULL,
                               character_id INTEGER NOT NULL
                           );""")
+        self.database = Database(self.tv_movie_db)
 
     def test_can_list_tables(self):
-        database = Database(self.tv_movie_db)
-        tables = database.tables()
+        tables = self.database.tables()
         self.assertEqual(6, len(tables))
         expected_table_names = ("productions",
                                 "episodes",
@@ -61,21 +61,18 @@ class DatabaseTests(unittest.TestCase):
             self.assert_(table.name in expected_table_names)
 
     def test_listed_tables_are_cached(self):
-        database = Database(self.tv_movie_db)
-        table1 = database.tables()[0]
-        table2 = database.tables()[0]
+        table1 = self.database.tables()[0]
+        table2 = self.database.tables()[0]
         self.assert_(table1 == table2)
 
     def test_listed_tables_are_not_cached_after_forget(self):
-        database = Database(self.tv_movie_db)
-        table1 = database.tables()[0]
-        database.forget()
-        table2 = database.tables()[0]
+        table1 = self.database.tables()[0]
+        self.database.forget()
+        table2 = self.database.tables()[0]
         self.assert_(table1 != table2)
 
     def test_can_get_columns_from_table(self):
-        database = Database(self.tv_movie_db)
-        productions = database.get_table("productions")
+        productions = self.database.get_table("productions")
         columns = productions.columns()
         self.assertEqual(3, len(columns))
         expected_column_names = ("id", "type", "name")
@@ -84,15 +81,13 @@ class DatabaseTests(unittest.TestCase):
             self.assert_(column.name in expected_column_names)
 
     def test_can_get_a_table_by_name(self):
-        database = Database(self.tv_movie_db)
-        productions = database.get_table("productions")
-        episodes = database.get_table("episodes")
+        productions = self.database.get_table("productions")
+        episodes = self.database.get_table("episodes")
         self.assertEqual("productions", productions.name)
         self.assertEqual("episodes", episodes.name)
 
     def test_can_insert_a_single_row_into_a_table(self):
-        database = Database(self.tv_movie_db)
-        characters = database.get_table("characters")
+        characters = self.database.get_table("characters")
         characters.insert(name="Kate Austin")
 
         cursor = self.tv_movie_db.cursor()
@@ -101,8 +96,7 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual((1, "Kate Austin"), rows[0])
 
     def test_can_select_a_single_row_from_a_table_by_text_where_clause(self):
-        database = Database(self.tv_movie_db)
-        characters = database.get_table("characters")
+        characters = self.database.get_table("characters")
         characters.insert(name="Kate Austin")
         characters.insert(name="Juliet Burke")
 
@@ -119,8 +113,7 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual("Kate Austin", kate.name)
 
     def test_can_select_all_rows_from_a_table_with_no_where_clause(self):
-        database = Database(self.tv_movie_db)
-        characters = database.get_table("characters")
+        characters = self.database.get_table("characters")
         characters.insert(name="Kate Austin")
         characters.insert(name="Juliet Burke")
 
@@ -131,8 +124,7 @@ class DatabaseTests(unittest.TestCase):
                          [lady.name for lady in ladies])
 
     def test_can_do_simplified_select_where(self):
-        database = Database(self.tv_movie_db)
-        characters = database.get_table("characters")
+        characters = self.database.get_table("characters")
         characters.insert(name="Kate Austin")
         characters.insert(name="Juliet Burke")
 
@@ -141,8 +133,7 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual((2, "Juliet Burke"), juliets[0])
 
     def test_can_do_select_with_limit(self):
-        database = Database(self.tv_movie_db)
-        characters = database.get_table("characters")
+        characters = self.database.get_table("characters")
         characters.insert(name="Kate Austin")
         characters.insert(name="Juliet Burke")
 
