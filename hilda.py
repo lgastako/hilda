@@ -57,11 +57,13 @@ class Table(object):
 
     record = property(_make_record)
 
-    def select(self, where=None):
+    def select(self, where=None, limit=None):
         cursor = self.driver.cursor()
         sql = "SELECT * FROM %s" % self.name
         if where:
             sql += " WHERE " + where
+        if limit:
+            sql += " LIMIT %d" + limit
         return map(self.record._make, cursor.execute(sql).fetchall())
 
 
