@@ -94,6 +94,18 @@ class DatabaseTests(unittest.TestCase):
         self.assertEqual("Juliet Burke", juliet.value)
         self.assertEqual("Kate Austin", kate.value)
 
+    def test_can_select_all_rows_from_a_table_with_no_where_clause(self):
+        database = Database(self.db1)
+        foo = database.get_table("foo")
+        foo.insert(value="Kate Austin")
+        foo.insert(value="Juliet Burke")
+
+        ladies = foo.select()
+        self.assertEqual(2, len(ladies))
+
+        self.assertEqual(["Kate Austin", "Juliet Burke"],
+                         [lady.value for lady in ladies])
+
     def tearDown(self):
         self.db1.close()
         self.db2.close()
