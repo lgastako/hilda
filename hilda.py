@@ -45,7 +45,40 @@ class Column(object):
     __ge__ = _bind_selection(">=")
 
 
-class Table(object):
+class SelectMixin(object):
+    def select(self, where=None, limit=None):
+        cursor = self.driver.cursor()
+        sql = "SELECT * FROM %s" % self.name
+        if where:
+            sql += " WHERE " + where
+        if limit:
+            sql += " LIMIT %d" + limit
+        return map(self.record._make, cursor.execute(sql).fetchall())
+
+    def select_where(self, limit=None, **kwargs):
+        cursor = self.driver.cursor()
+
+        sql = "SELECT * FROM %s" % self.name
+        if len(kwargs):
+            columns = kwargs.keys()
+            column_param_pairs = [(column, colonize(column)) for column in columns]
+            clauses = ["%s = %s" % pair for pair in column_param_pairs]
+            where = " AND ".join(clauses)
+            sql += " WHERE " + where
+        if limit is not None:
+            sql += " LIMIT %d" % limit
+        return map(self.record._make, cursor.execute(sql, kwargs).fetchall())
+
+    def select_one_where(self, **kwargs):
+        results = self.select_where(limit=2, **kwargs)
+        if len(results) <= 0:
+            raise NoResultFound
+        if len(results) > 1:
+            raise TooManyResultsFound
+        return results[0]
+
+
+class Table(SelectMixin):
     def __init__(self, driver, name):
         self.driver = driver
         self.name = name
@@ -81,37 +114,6 @@ class Table(object):
                           [c.name for c in self.columns()])
 
     record = property(_make_record)
-
-    def select(self, where=None, limit=None):
-        cursor = self.driver.cursor()
-        sql = "SELECT * FROM %s" % self.name
-        if where:
-            sql += " WHERE " + where
-        if limit:
-            sql += " LIMIT %d" + limit
-        return map(self.record._make, cursor.execute(sql).fetchall())
-
-    def select_where(self, limit=None, **kwargs):
-        cursor = self.driver.cursor()
-
-        sql = "SELECT * FROM %s" % self.name
-        if len(kwargs):
-            columns = kwargs.keys()
-            column_param_pairs = [(column, colonize(column)) for column in columns]
-            clauses = ["%s = %s" % pair for pair in column_param_pairs]
-            where = " AND ".join(clauses)
-            sql += " WHERE " + where
-        if limit is not None:
-            sql += " LIMIT %d" % limit
-        return map(self.record._make, cursor.execute(sql, kwargs).fetchall())
-
-    def select_one_where(self, **kwargs):
-        results = self.select_where(limit=2, **kwargs)
-        if len(results) <= 0:
-            raise NoResultFound
-        if len(results) > 1:
-            raise TooManyResultsFound
-        return results[0]
 
 
 class Database(object):
