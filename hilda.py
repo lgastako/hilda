@@ -1,6 +1,9 @@
 from functools import wraps
 from collections import defaultdict
 
+# TODO: manage lifecycle of cursor correctly.  Probably shouldn't be
+# creating new ones all over the place?
+
 
 def memoize(f):
     @wraps(f)
