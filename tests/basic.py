@@ -8,6 +8,9 @@ from hilda import Database
 # TODO: Handle the notion of caching the meta data so it doesn't have to
 #       reinterrogate the database for every instance of Database.
 
+PRODUCTION_TYPE_MOVIE   = 1
+PRODUCTION_TYPE_TV_SHOW = 2
+
 
 class DatabaseTests(unittest.TestCase):
     def setUp(self):
@@ -23,7 +26,7 @@ class DatabaseTests(unittest.TestCase):
                               production_id INTEGER NOT NULL,
                               season_number INTEGER,
                               episode_number INTEGER NOT NULL,
-                              episode_name VARCHAR(255)
+                              name VARCHAR(255)
                           );""")
         cursor.execute("""CREATE TABLE episodes_productions (
                               episode_id INTEGER NOT NULL,
