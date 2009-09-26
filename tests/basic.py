@@ -59,6 +59,13 @@ class DatabaseTests(unittest.TestCase):
             self.assert_(bool(column))
             self.assert_(column.name in expected_column_names)
 
+    def test_can_get_a_table_by_name(self):
+        database = Database(self.db1)
+        foo = database.get_table("foo")
+        bar = database.get_table("bar")
+        self.assertEqual("foo", foo.name)
+        self.assertEqual("bar", bar.name)
+
     def tearDown(self):
         self.db1.close()
         self.db2.close()

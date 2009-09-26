@@ -46,6 +46,17 @@ class Database(object):
         """).fetchall()
         return [Table(self.driver, row[0]) for row in rows]
 
+    def _get_table_map(self):
+        # TODO: memoize maybe, etc. once this is finalized.  Also need
+        # to handle schema.name etc
+        return dict((table.name, table) for table in self.tables())
+
+    def get_table(self, name):
+        # Do we want to let this raise a KeyError if you specify a
+        # table that doesn't exist or convert it to a custom
+        # exception?
+        return self._get_table_map()[name]
+
     def forget(self):
         if hasattr(self, "_memo_cache"):
             del self.__dict__["_memo_cache"]
