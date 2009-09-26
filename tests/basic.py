@@ -5,6 +5,8 @@ import sqlite3
 from hilda import Database
 
 # TODO: Dialects
+# TODO: Handle the notion of caching the meta data so it doesn't have to
+#       reinterrogate the database for every instance of Database.
 
 
 class DatabaseTests(unittest.TestCase):
