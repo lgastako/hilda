@@ -10,11 +10,13 @@ from collections import namedtuple
 # TODO: manage lifecycle of cursor correctly.  Probably shouldn't be
 # creating new ones all over the place?
 
+
 def identity(x):
     return x
 
 
 def memoize(f):
+
     @wraps(f)
     def wrapped(self, *args, **kwargs):
         if not hasattr(self, "_memo_cache"):
@@ -25,6 +27,7 @@ def memoize(f):
         if key not in method_cache:
             method_cache[key] = apply(f, [self] + list(args), kwargs)
         return method_cache[key]
+
     return wrapped
 
 
@@ -37,15 +40,19 @@ def sql_group(s):
 
 
 def _bind_selection(op):
+
     def _bound_selection(self, other):
         return Selection(self, op, other)
+
     return _bound_selection
 
 
 class Column(object):
+
     def __init__(self, name, table, alias=None):
-        self.__dict__.update(locals())
-        del self.self
+        self.name = name
+        self.table = table
+        self.alias = alias
 
     __eq__ = _bind_selection("=")
     __ne__ = _bind_selection("<>")
@@ -65,6 +72,7 @@ class Column(object):
 
 
 class SelectMixin(object):
+
     def select(self, where=None, limit=None):
         cursor = self.get_cursor()
         sql = "SELECT * FROM %s" % self._tables_clause()
@@ -87,7 +95,8 @@ class SelectMixin(object):
         sql = "SELECT * FROM %s" % self._tables_clause()
         if len(kwargs):
             columns = kwargs.keys()
-            column_param_pairs = [(column, colonize(column)) for column in columns]
+            column_param_pairs = [(column, colonize(column))
+                                  for column in columns]
             clauses = ["%s = %s" % pair for pair in column_param_pairs]
             where = " AND ".join(clauses)
             sql += " WHERE " + where
@@ -105,6 +114,7 @@ class SelectMixin(object):
 
 
 class Table(SelectMixin):
+
     def __init__(self, driver, name):
         self.driver = driver
         self.name = name
@@ -150,6 +160,7 @@ class Table(SelectMixin):
 
 
 class Database(object):
+
     def __init__(self, driver):
         self.driver = driver
 
@@ -184,12 +195,14 @@ class Database(object):
 
 
 class Alias(object):
+
     def __init__(self, entity, alias):
         self.__dict__.update(locals())
         del self.self
 
 
 class Selection(object):
+
     def __init__(self, column1, operator, argument):
         self.__dict__.update(locals())
         del self.self
@@ -214,6 +227,7 @@ class Selection(object):
 
 
 class Join(SelectMixin):
+
     def __init__(self, selections, aliases=None):
         self.__dict__.update(locals())
         del self.self
@@ -237,10 +251,12 @@ class Join(SelectMixin):
         # We probably can't do this this way for real, beacuse we'll
         # need to differentiate between columns with the same name in
         # different tables, but for now...
-        return tuple(sorted(reduce(operator.add, [t.columns() for t in self.tables()])))
+        return tuple(sorted(reduce(operator.add,
+                                   [t.columns() for t in self.tables()])))
 
     def _aliased_columns(self):
         if self.aliases:
+
             def swap_in_alias(column):
                 # TODO: efficiency++
                 for aliased_column in self.aliases:
@@ -248,6 +264,7 @@ class Join(SelectMixin):
                             aliased_column.name == column.name:
                         return aliased_column
                 return column
+
         else:
             swap_in_alias = identity
         return map(swap_in_alias, self._columns())
@@ -261,4 +278,5 @@ class Join(SelectMixin):
 
     @property
     def _base_where(self):
-        return sql_group(" AND ".join([s.to_sql_fragment() for s in self.selections]))
+        return sql_group(" AND ".join([s.to_sql_fragment()
+                                       for s in self.selections]))

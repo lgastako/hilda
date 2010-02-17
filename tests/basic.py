@@ -9,11 +9,12 @@ from hilda import Selection
 # TODO: Handle the notion of caching the meta data so it doesn't have to
 #       reinterrogate the database for every instance of Database.
 
-PRODUCTION_TYPE_MOVIE   = 1
+PRODUCTION_TYPE_MOVIE = 1
 PRODUCTION_TYPE_TV_SHOW = 2
 
 
 class DatabaseTests(unittest.TestCase):
+
     def setUp(self):
         self.tv_movie_db = sqlite3.connect(":memory:")
         cursor = self.tv_movie_db.cursor()
@@ -107,12 +108,12 @@ class DatabaseTests(unittest.TestCase):
         # We pull them out in reverse order just to avoid a simple
         # iteration satisfying the test by conincidence
         juliets = characters.select(where="id = 2")
-        kates   = characters.select(where="id = 1")
+        kates = characters.select(where="id = 1")
         self.assertEqual(1, len(juliets))
         self.assertEqual(1, len(kates))
 
         juliet = juliets[0]
-        kate   = kates[0]
+        kate = kates[0]
         self.assertEqual("Juliet Burke", juliet.name)
         self.assertEqual("Kate Austin", kate.name)
 
@@ -141,10 +142,10 @@ class DatabaseTests(unittest.TestCase):
         characters.insert(name="Kate Austin")
         characters.insert(name="Juliet Burke")
 
-        all = characters.select()
-        some = characters.select_where(limit=1)
-        self.assertEqual(2, len(all))
-        self.assertEqual(1, len(some))
+        all_characters = characters.select()
+        some_characters = characters.select_where(limit=1)
+        self.assertEqual(2, len(all_characters))
+        self.assertEqual(1, len(some_characters))
 
     def test_can_do_simplified_select_one_where(self):
         characters = self.database.get_table("characters")
@@ -170,7 +171,7 @@ class DatabaseTests(unittest.TestCase):
         episodes = self.database.get_table("episodes")
         productions = self.database.get_table("productions")
 
-        selection = episodes.c.production_id==productions.c.id
+        selection = episodes.c.production_id == productions.c.id
         self.assertEqual(Selection, type(selection))
         self.assertEqual("episodes.production_id = productions.id",
                          selection.to_sql_fragment())
@@ -179,7 +180,7 @@ class DatabaseTests(unittest.TestCase):
         episodes = self.database.get_table("episodes")
         productions = self.database.get_table("productions")
 
-        selection = episodes.c.production_id!=productions.c.id
+        selection = episodes.c.production_id != productions.c.id
         self.assertEqual(Selection, type(selection))
         self.assertEqual("episodes.production_id <> productions.id",
                          selection.to_sql_fragment())
@@ -206,7 +207,7 @@ class DatabaseTests(unittest.TestCase):
         episodes = self.database.get_table("episodes")
         productions = self.database.get_table("productions")
 
-        selection = episodes.c.production_id<=productions.c.id
+        selection = episodes.c.production_id <= productions.c.id
         self.assertEqual(Selection, type(selection))
         self.assertEqual("episodes.production_id <= productions.id",
                          selection.to_sql_fragment())
@@ -215,7 +216,7 @@ class DatabaseTests(unittest.TestCase):
         episodes = self.database.get_table("episodes")
         productions = self.database.get_table("productions")
 
-        selection = episodes.c.production_id>=productions.c.id
+        selection = episodes.c.production_id >= productions.c.id
         self.assertEqual(Selection, type(selection))
         self.assertEqual("episodes.production_id >= productions.id",
                          selection.to_sql_fragment())
@@ -255,7 +256,7 @@ class DatabaseTests(unittest.TestCase):
                         name="Crocodile")
 
         episode_with_production = self.database.create_join(\
-            episodes.c.production_id==productions.c.id,
+            episodes.c.production_id == productions.c.id,
             aliases=[episodes.c.name("episode_name"),
                      productions.c.name("production_name"),
                      episodes.c.id("episode_id"),
