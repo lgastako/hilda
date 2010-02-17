@@ -11,6 +11,18 @@ from collections import namedtuple
 # creating new ones all over the place?
 
 
+class HildaException(Exception):
+    pass
+
+
+class NoResultFound(HildaException):
+    pass
+
+
+class TooManyResultsFound(HildaException):
+    pass
+
+
 def identity(x):
     return x
 
