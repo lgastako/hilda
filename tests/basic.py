@@ -5,6 +5,9 @@ import sqlite3
 from hilda import Database
 from hilda import Selection
 
+from hilda import NoResultFound
+from hilda import TooManyResultsFound
+
 # TODO: Dialects
 # TODO: Handle the notion of caching the meta data so it doesn't have to
 #       reinterrogate the database for every instance of Database.
@@ -116,6 +119,18 @@ class DatabaseTests(unittest.TestCase):
         kate = kates[0]
         self.assertEqual("Juliet Burke", juliet.name)
         self.assertEqual("Kate Austin", kate.name)
+
+    def test_select_one_where_raises_no_result_found(self):
+        characters = self.database.get_table("characters")
+        self.assertRaises(NoResultFound,
+                          lambda: characters.select_one_where(name="NOPE"))
+
+    def test_select_one_where_raises_too_many_results_found(self):
+        actors = self.database.get_table("actors")
+        actors.insert(first_name="John", last_name="Smith")
+        actors.insert(first_name="John", last_name="Davis")
+        self.assertRaises(TooManyResultsFound,
+                          lambda: actors.select_one_where(first_name="John"))
 
     def test_can_select_all_rows_from_a_table_with_no_where_clause(self):
         characters = self.database.get_table("characters")
