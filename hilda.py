@@ -153,7 +153,7 @@ class Table(SelectMixin):
 
     c = property(_make_column_property)
 
-    def insert(self, *args, **kwargs):
+    def insert(self, **kwargs):
         cursor = self.get_cursor()
         columns = kwargs.keys()
         column_specification = ", ".join(columns)
