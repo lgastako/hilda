@@ -209,15 +209,16 @@ class Database(object):
 class Alias(object):
 
     def __init__(self, entity, alias):
-        self.__dict__.update(locals())
-        del self.self
+        self.entity = entity
+        self.alias = alias
 
 
 class Selection(object):
 
     def __init__(self, column1, operator, argument):
-        self.__dict__.update(locals())
-        del self.self
+        self.column1 = column1
+        self.operator = operator
+        self.argument = argument
 
     def _render_argument(self):
         arg = self.argument
@@ -241,8 +242,8 @@ class Selection(object):
 class Join(SelectMixin):
 
     def __init__(self, selections, aliases=None):
-        self.__dict__.update(locals())
-        del self.self
+        self.selections = selections
+        self.aliases = aliases
 
     def get_cursor(self):
         return self.selections[0].column1.table.get_cursor()
