@@ -5,8 +5,8 @@ import sqlite3
 from hilda.core import Database
 from hilda.core import Selection
 
-from hilda.core import NoResultFound
-from hilda.core import TooManyResultsFound
+from hilda.exceptions import NoResultFound
+from hilda.exceptions import TooManyResultsFound
 
 # TODO: Dialects
 # TODO: Handle the notion of caching the meta data so it doesn't have to
