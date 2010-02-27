@@ -9,9 +9,6 @@ from hilda.memoizer import unmemoize_instance
 from hilda.exceptions import NoResultFound
 from hilda.exceptions import TooManyResultsFound
 
-# TODO: manage lifecycle of cursor correctly.  Probably shouldn't be
-# creating new ones all over the place?
-
 
 def identity(x):
     return x
