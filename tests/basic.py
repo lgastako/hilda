@@ -2,11 +2,11 @@
 import unittest
 import sqlite3
 
-from hilda import Database
-from hilda import Selection
+from hilda.core import Database
+from hilda.core import Selection
 
-from hilda import NoResultFound
-from hilda import TooManyResultsFound
+from hilda.core import NoResultFound
+from hilda.core import TooManyResultsFound
 
 # TODO: Dialects
 # TODO: Handle the notion of caching the meta data so it doesn't have to
