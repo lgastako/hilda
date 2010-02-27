@@ -90,6 +90,14 @@ class Column(object):
 
 class SelectMixin(object):
 
+    def get_cursor(self):
+        raise NotImplementedError("Subclasses must implement.")
+
+    def _tables_clause(self):
+        raise NotImplementedError("Subclasses must implement.")
+
+    _base_where = NotImplemented
+
     def select(self, where=None, limit=None):
         cursor = self.get_cursor()
         sql = "SELECT * FROM %s" % self._tables_clause()
