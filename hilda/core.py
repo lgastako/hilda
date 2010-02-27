@@ -1,10 +1,10 @@
 import operator
 import copy
 
-from functools import wraps
-
-from collections import defaultdict
 from collections import namedtuple
+
+from hilda.memoizer import memoize
+from hilda.memoizer import unmemoize_instance
 
 from hilda.exceptions import NoResultFound
 from hilda.exceptions import TooManyResultsFound
@@ -15,27 +15,6 @@ from hilda.exceptions import TooManyResultsFound
 
 def identity(x):
     return x
-
-
-MEMO_CACHE = defaultdict(lambda: defaultdict(dict))
-
-
-def memoize(f):
-
-    @wraps(f)
-    def wrapped(self, *args, **kwargs):
-        method_cache = MEMO_CACHE[self]
-        cache = method_cache[f.__name__]
-        key = (args, repr(kwargs))
-        if key not in cache:
-            cache[key] = apply(f, [self] + list(args), kwargs)
-        return cache[key]
-
-    return wrapped
-
-
-def unmemoize_instance(o):
-    MEMO_CACHE[o] = defaultdict(dict)
 
 
 def colonize(column):
