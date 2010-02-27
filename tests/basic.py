@@ -98,7 +98,7 @@ class DatabaseTests(unittest.TestCase):
         characters = self.database.get_table("characters")
         characters.insert(name="Kate Austin")
 
-        cursor = self.tv_movie_db.cursor()
+        cursor = characters.get_cursor()
         rows = cursor.execute("SELECT * FROM characters").fetchall()
         self.assertEqual(1, len(rows))
         self.assertEqual((1, "Kate Austin"), rows[0])
