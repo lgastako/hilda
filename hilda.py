@@ -27,20 +27,25 @@ def identity(x):
     return x
 
 
+MEMO_CACHE = defaultdict(lambda: defaultdict(dict))
+
+
 def memoize(f):
 
     @wraps(f)
     def wrapped(self, *args, **kwargs):
-        if not hasattr(self, "_memo_cache"):
-            self._memo_cache = defaultdict(dict)
-        memo_cache = self._memo_cache
-        method_cache = self._memo_cache[f.__name__]
+        method_cache = MEMO_CACHE[self]
+        cache = method_cache[f.__name__]
         key = (args, repr(kwargs))
-        if key not in method_cache:
-            method_cache[key] = apply(f, [self] + list(args), kwargs)
-        return method_cache[key]
+        if key not in cache:
+            cache[key] = apply(f, [self] + list(args), kwargs)
+        return cache[key]
 
     return wrapped
+
+
+def unmemoize_instance(o):
+    MEMO_CACHE[o] = defaultdict(dict)
 
 
 def colonize(column):
@@ -198,8 +203,7 @@ class Database(object):
         return self._get_table_map()[name]
 
     def forget(self):
-        if hasattr(self, "_memo_cache"):
-            del self.__dict__["_memo_cache"]
+        unmemoize_instance(self)
 
     def create_join(self, *args, **kwargs):
         assert len(kwargs) == 0 or (len(kwargs) == 1 and "aliases" in kwargs)
