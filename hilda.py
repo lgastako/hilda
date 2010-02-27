@@ -141,6 +141,7 @@ class SelectMixin(object):
 class Table(SelectMixin):
 
     def __init__(self, driver, name):
+        super(Table, self).__init__()
         self.driver = driver
         self.name = name
         self._base_where = None
@@ -254,6 +255,7 @@ class Selection(object):
 class Join(SelectMixin):
 
     def __init__(self, selections, aliases=None):
+        super(Join, self).__init__()
         self.selections = selections
         self.aliases = aliases
 
