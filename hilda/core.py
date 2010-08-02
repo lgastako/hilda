@@ -103,6 +103,11 @@ class SelectMixin(object):
             raise TooManyResultsFound
         return results[0]
 
+    def count(self):
+        sql = "SELECT COUNT(*) FROM %s" % self._tables_clause()
+        cursor = self.get_cursor()
+        return cursor.execute(sql).fetchone()[0]
+
 
 class Table(SelectMixin):
 
@@ -156,15 +161,8 @@ class Database(object):
     def __init__(self, driver):
         self.driver = driver
 
-    @memoize
     def tables(self):
-        cursor = self.driver.cursor()
-        rows = cursor.execute("""
-            SELECT name FROM sqlite_master
-            WHERE type='table'
-            ORDER BY name;
-        """).fetchall()
-        return [Table(self.driver, row[0]) for row in rows]
+        raise NotImplementedError("Subclasses must implement.")
 
     def _get_table_map(self):
         # TODO: memoize maybe, etc. once this is finalized.  Also need
@@ -183,6 +181,35 @@ class Database(object):
     def create_join(self, *args, **kwargs):
         assert len(kwargs) == 0 or (len(kwargs) == 1 and "aliases" in kwargs)
         return Join(args, aliases=kwargs.get("aliases"))
+
+
+class SQLLiteDatabase(Database):
+
+    @memoize
+    def tables(self):
+        cursor = self.driver.cursor()
+        rows = cursor.execute("""
+            SELECT name FROM sqlite_master
+            WHERE type='table'
+            ORDER BY name;
+        """).fetchall()
+        return [Table(self.driver, row[0]) for row in rows]
+
+
+class PostgresDatabase(Database):
+
+    @memoize
+    def tables(self):
+        cursor = self.driver.cursor()
+        # TODO: Schema support.
+        import ipdb; ipdb.set_trace()
+        cursor.execute("""
+            SELECT tablename
+            FROM pg_tables
+            WHERE schemaname = 'public'
+        """)
+        rows = cursor.fetchall()
+        return [Table(self.driver, row[0]) for row in rows]
 
 
 class Alias(object):

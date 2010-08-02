@@ -2,7 +2,7 @@
 import unittest
 import sqlite3
 
-from hilda.core import Database
+from hilda.core import SQLLiteDatabase as Database
 from hilda.core import Selection
 
 from hilda.exceptions import NoResultFound
@@ -102,6 +102,13 @@ class DatabaseTests(unittest.TestCase):
         rows = cursor.execute("SELECT * FROM characters").fetchall()
         self.assertEqual(1, len(rows))
         self.assertEqual((1, "Kate Austin"), rows[0])
+
+    def test_can_get_a_count(self):
+        characters = self.database.get_table("characters")
+        characters.insert(name="Kate Austin")
+        characters.insert(name="Juliet Burke")
+
+        self.assertEquals(2, characters.count())
 
     def test_can_select_a_single_row_from_a_table_by_text_where_clause(self):
         characters = self.database.get_table("characters")
