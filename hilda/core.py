@@ -78,7 +78,7 @@ class SelectMixin(object):
             sql += where
         if limit:
             sql += " LIMIT %d" + limit
-        return map(self.record._make, cursor.execute(sql).fetchall())
+        return map(self.record._make, self.fetchall(cursor, sql))
 
     def select_where(self, limit=None, **kwargs):
         cursor = self.get_cursor()
@@ -93,7 +93,7 @@ class SelectMixin(object):
             sql += " WHERE " + where
         if limit is not None:
             sql += " LIMIT %d" % limit
-        return map(self.record._make, cursor.execute(sql, kwargs).fetchall())
+        return map(self.record._make, self.fetchall(cursor, sql, **kwargs))
 
     def select_one_where(self, **kwargs):
         results = self.select_where(limit=2, **kwargs)
@@ -104,21 +104,27 @@ class SelectMixin(object):
         return results[0]
 
     def count(self):
-        sql = "SELECT COUNT(*) FROM %s" % self._tables_clause()
         cursor = self.get_cursor()
-        return cursor.execute(sql).fetchone()[0]
+        sql = "SELECT COUNT(*) FROM %s" % self._tables_clause()
+        return self.fetchone(cursor, sql)[0]
 
 
 class Table(SelectMixin):
 
-    def __init__(self, driver, name):
+    def __init__(self, database, name):
         super(Table, self).__init__()
-        self.driver = driver
+        self.database = database
         self.name = name
         self._base_where = None
 
     def get_cursor(self):
-        return self.driver.cursor()
+        return self.database.driver.cursor()
+
+    def fetchone(self, cursor, sql, **kwargs):
+        return self.database.fetchone(cursor, sql, **kwargs)
+
+    def fetchall(self, cursor, sql, **kwargs):
+        return self.database.fetchall(cursor, sql, **kwargs)
 
     def _tables_clause(self):
         return self.name
@@ -126,7 +132,8 @@ class Table(SelectMixin):
     @memoize
     def columns(self):
         cursor = self.get_cursor()
-        rows = cursor.execute("PRAGMA table_info(%s)" % self.name).fetchall()
+        cursor.execute("PRAGMA table_info(%s)" % self.name)
+        rows = cursor.fetchall()
         return [Column(row[1], self) for row in rows]
 
     def _make_column_property(self):
@@ -180,7 +187,7 @@ class Database(object):
 
     def create_join(self, *args, **kwargs):
         assert len(kwargs) == 0 or (len(kwargs) == 1 and "aliases" in kwargs)
-        return Join(args, aliases=kwargs.get("aliases"))
+        return Join(self, args, aliases=kwargs.get("aliases"))
 
 
 class SQLLiteDatabase(Database):
@@ -188,12 +195,21 @@ class SQLLiteDatabase(Database):
     @memoize
     def tables(self):
         cursor = self.driver.cursor()
-        rows = cursor.execute("""
+        sql = """
             SELECT name FROM sqlite_master
             WHERE type='table'
             ORDER BY name;
-        """).fetchall()
-        return [Table(self.driver, row[0]) for row in rows]
+        """
+        rows = self.fetchall(cursor, sql)
+        return [Table(self, row[0]) for row in rows]
+
+    def fetchall(self, cursor, sql, **kwargs):
+        cursor.execute(sql, kwargs)
+        return cursor.fetchall()
+
+    def fetchone(self, cursor, sql, **kwargs):
+        cursor.execute(sql, kwargs)
+        return cursor.fetchone()
 
 
 class PostgresDatabase(Database):
@@ -209,7 +225,15 @@ class PostgresDatabase(Database):
             WHERE schemaname = 'public'
         """)
         rows = cursor.fetchall()
-        return [Table(self.driver, row[0]) for row in rows]
+        return [Table(self, row[0]) for row in rows]
+
+    def fetchall(self, cursor, sql):
+        cursor.execute(sql)
+        return cursor.fetchall()
+
+    def fetchone(self, cursor, sql):
+        cursor.execute(sql)
+        return cursor.fetchone()
 
 
 class Alias(object):
@@ -247,13 +271,20 @@ class Selection(object):
 
 class Join(SelectMixin):
 
-    def __init__(self, selections, aliases=None):
+    def __init__(self, database, selections, aliases=None):
         super(Join, self).__init__()
+        self.database = database
         self.selections = selections
         self.aliases = aliases
 
     def get_cursor(self):
         return self.selections[0].column1.table.get_cursor()
+
+    def fetchall(self, cursor, sql, **kwargs):
+        return self.database.fetchall(cursor, sql, **kwargs)
+
+    def fetchone(self, cursor, sql, **kwargs):
+        return self.database.fetchone(cursor, sql, **kwargs)
 
     def tables(self):
         return reduce(set.union, [s.tables() for s in self.selections])
