@@ -227,7 +227,6 @@ class PostgresDatabase(Database):
     def tables(self):
         cursor = self.driver.cursor()
         # TODO: Schema support.
-        import ipdb; ipdb.set_trace()
         cursor.execute("""
             SELECT tablename
             FROM pg_tables
