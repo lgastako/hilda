@@ -198,6 +198,14 @@ class Database(object):
         assert len(kwargs) == 0 or (len(kwargs) == 1 and "aliases" in kwargs)
         return Join(self, args, aliases=kwargs.get("aliases"))
 
+    def fetchall(self, cursor, sql, **kwargs):
+        cursor.execute(sql, kwargs)
+        return cursor.fetchall()
+
+    def fetchone(self, cursor, sql, **kwargs):
+        cursor.execute(sql, kwargs)
+        return cursor.fetchone()
+
 
 class SQLLiteDatabase(Database):
 
@@ -211,14 +219,6 @@ class SQLLiteDatabase(Database):
         """
         rows = self.fetchall(cursor, sql)
         return [Table(self, row[0]) for row in rows]
-
-    def fetchall(self, cursor, sql, **kwargs):
-        cursor.execute(sql, kwargs)
-        return cursor.fetchall()
-
-    def fetchone(self, cursor, sql, **kwargs):
-        cursor.execute(sql, kwargs)
-        return cursor.fetchone()
 
 
 class PostgresDatabase(Database):
@@ -235,14 +235,6 @@ class PostgresDatabase(Database):
         """)
         rows = cursor.fetchall()
         return [Table(self, row[0]) for row in rows]
-
-    def fetchall(self, cursor, sql):
-        cursor.execute(sql)
-        return cursor.fetchall()
-
-    def fetchone(self, cursor, sql):
-        cursor.execute(sql)
-        return cursor.fetchone()
 
 
 class Alias(object):
