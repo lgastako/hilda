@@ -110,6 +110,13 @@ class DatabaseTests(unittest.TestCase):
 
         self.assertEquals(2, characters.count())
 
+    def test_can_get_a_count_with_where_clause(self):
+        characters = self.database.get_table("characters")
+        characters.insert(name="Kate Austin")
+        characters.insert(name="Juliet Burke")
+
+        self.assertEquals(1, characters.count(where="name = 'Kate Austin'"))
+
     def test_can_select_a_single_row_from_a_table_by_text_where_clause(self):
         characters = self.database.get_table("characters")
         characters.insert(name="Kate Austin")
@@ -285,6 +292,49 @@ class DatabaseTests(unittest.TestCase):
                      productions.c.id("production_production_id")])
         episodes = episode_with_production.select()
         self.assertEqual(5, len(episodes))
+
+    def test_can_count_join_on_two_tables(self):
+        episodes = self.database.get_table("episodes")
+        productions = self.database.get_table("productions")
+
+        productions.insert(type=PRODUCTION_TYPE_TV_SHOW,
+                           name="Lost")
+        productions.insert(type=PRODUCTION_TYPE_TV_SHOW,
+                           name="Dexter")
+
+        lost = productions.select_one_where(name="Lost")
+        dexter = productions.select_one_where(name="Dexter")
+
+        episodes.insert(production_id=lost.id,
+                        season_number=1,
+                        episode_number=1,
+                        name="Pilot, Part 1")
+        episodes.insert(production_id=lost.id,
+                        season_number=1,
+                        episode_number=2,
+                        name="Pilot, Part 2")
+        episodes.insert(production_id=lost.id,
+                        season_number=1,
+                        episode_number=3,
+                        name="Tabula Rasa")
+
+        episodes.insert(production_id=dexter.id,
+                        season_number=1,
+                        episode_number=1,
+                        name="Pilot")
+        episodes.insert(production_id=dexter.id,
+                        season_number=1,
+                        episode_number=2,
+                        name="Crocodile")
+
+        episode_with_production = self.database.create_join(\
+            episodes.c.production_id == productions.c.id,
+            aliases=[episodes.c.name("episode_name"),
+                     productions.c.name("production_name"),
+                     episodes.c.id("episode_id"),
+                     productions.c.id("production_production_id")])
+        episodes = episode_with_production.select()
+        self.assertEqual(5, episode_with_production.count())
 
     # TODO: Explicit tests for aliases at column level and in
     # create_join.  Also should add to all other select statement stuff.

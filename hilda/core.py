@@ -64,9 +64,9 @@ class SelectMixin(object):
 
     _base_where = NotImplemented
 
-    def select(self, where=None, limit=None):
+    def select(self, what="*", where=None, limit=None):
         cursor = self.get_cursor()
-        sql = "SELECT * FROM %s" % self._tables_clause()
+        sql = "SELECT %s FROM %s" % (what, self._tables_clause())
         base_where = self._base_where
         if base_where or where:
             sql += " WHERE "
@@ -103,9 +103,18 @@ class SelectMixin(object):
             raise TooManyResultsFound
         return results[0]
 
-    def count(self):
+    def count(self, where=None):
         cursor = self.get_cursor()
         sql = "SELECT COUNT(*) FROM %s" % self._tables_clause()
+        base_where = self._base_where
+        if base_where or where:
+            sql += " WHERE "
+        if base_where:
+            sql += base_where
+        if where:
+            if base_where:
+                sql += " AND "
+            sql += where
         return self.fetchone(cursor, sql)[0]
 
 
